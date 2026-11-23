@@ -1,0 +1,4 @@
+#!/bin/sh
+# Commit öncesi API anahtarı taraması.
+# Etkinleştirmek için (bir kez): git config core.hooksPath .githooks
+node scripts/check-secrets.mjs || exit 1

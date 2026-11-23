@@ -1,0 +1,45 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+public/pdfjs
+
+# ---- Gizli bilgiler: asla commit edilmez ----
+# Uygulama API anahtarlarını Windows Kimlik Bilgisi Yöneticisi'nde tutar, dosyaya yazmaz.
+# Yine de olası yerel dosyalara karşı koruma:
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.*
+*.secret
+*api-key*
+*apikey*
+
+# Kişisel / yerel dosyalar
+*.lnk
+data.json
+ceviri-onbellek.json

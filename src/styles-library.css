@@ -1,0 +1,321 @@
+/* ================================================================ Son okunanları silme */
+.recent-tools {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px 6px 10px;
+}
+.row-check {
+  accent-color: var(--accent);
+  margin: 0;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+.file-row.checked {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+.clear-panel {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--panel-2);
+}
+.clear-panel .row {
+  margin-top: 4px;
+}
+.btn.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+  font-weight: 600;
+}
+.btn.danger:hover {
+  filter: brightness(1.08);
+  background: var(--danger);
+}
+.check.small {
+  font-size: 12.5px;
+  gap: 6px;
+}
+.clear-box {
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--panel-2);
+}
+.row.wrap {
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 6px;
+}
+.card {
+  position: relative;
+}
+.card-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+  opacity: 0;
+  transition: opacity 0.12s, background 0.12s;
+}
+.card:hover .card-remove {
+  opacity: 1;
+}
+.card-remove:hover {
+  background: var(--hover);
+  color: var(--danger);
+}
+.home-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.home-head h2 {
+  margin: 10px 0 !important;
+}
+.sidebar-actions.tight {
+  padding-top: 0;
+}
+.btn.selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ================================================================ Tümünü gör */
+.library {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.search-box.inline {
+  margin: 0;
+  width: 200px;
+}
+.search-box.inline input {
+  padding: 5px 0;
+}
+.compact-select {
+  padding: 5px 8px;
+  font-size: 12.5px;
+}
+.library-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 26px 40px;
+}
+.lib-section + .lib-section {
+  margin-top: 22px;
+}
+.lib-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  margin: 0 -8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--text-dim);
+}
+.lib-head:hover {
+  background: var(--hover);
+}
+.lib-title {
+  font-weight: 700;
+  font-size: 14.5px;
+  color: var(--text);
+}
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 22px 18px;
+}
+.book {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.cover {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.book:hover .cover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+}
+.cover-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+}
+.cover.pdf .cover-placeholder {
+  color: var(--pdf);
+  background: color-mix(in srgb, var(--pdf) 7%, var(--panel));
+}
+.cover.md .cover-placeholder {
+  color: var(--md);
+  background: color-mix(in srgb, var(--md) 7%, var(--panel));
+}
+.spinner.small {
+  width: 12px;
+  height: 12px;
+  border-width: 2px;
+}
+.kind-tag {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--pdf);
+}
+.kind-tag.md {
+  background: var(--md);
+}
+.book-star {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.book:hover .book-star {
+  opacity: 1;
+}
+.book-star.on {
+  opacity: 1;
+  color: #ffd43b;
+}
+.book-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.book .card-progress {
+  margin-top: 0;
+}
+
+/* ================================================================ Ek sağlayıcılar */
+.custom-providers {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--panel-2);
+}
+.custom-providers > .btn {
+  justify-self: start;
+}
+.provider-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+.provider-meta {
+  display: grid;
+  min-width: 0;
+  font-size: 13px;
+}
+.provider-meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.provider-form {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: var(--panel);
+}
+.pf-title {
+  font-weight: 700;
+  font-size: 13.5px;
+}
+.pf-message {
+  font-size: 12.5px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  margin-top: 6px;
+  word-break: break-word;
+}
+.pf-message.ok {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+}
+.pf-message.error {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+.pf-actions {
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.badge.engine-openai {
+  color: #b35c00;
+  background: rgba(230, 119, 0, 0.14);
+}
+.badge.engine-anthropic {
+  color: #c15f3c;
+  background: rgba(217, 119, 87, 0.15);
+}
+:root[data-theme="dark"] .badge.engine-openai,
+:root[data-theme="night"] .badge.engine-openai {
+  color: #ffb366;
+}
+:root[data-theme="dark"] .badge.engine-anthropic,
+:root[data-theme="night"] .badge.engine-anthropic {
+  color: #f0a586;
+}

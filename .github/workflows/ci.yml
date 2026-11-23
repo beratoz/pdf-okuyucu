@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Anahtar taraması
+        run: node scripts/check-secrets.mjs
+
+      - name: Bağımlılıklar
+        run: npm ci
+
+      - name: Arayüz (TypeScript + Vite)
+        run: npm run build
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Rust testleri
+        working-directory: src-tauri
+        run: cargo test --lib
