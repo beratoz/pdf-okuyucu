@@ -93,9 +93,19 @@ pub async fn scan_folder(path: String) -> Result<Vec<FileEntry>, String> {
     .map_err(|e| e.to_string())?
 }
 
+/// Güvenlik: arayüz yalnızca PDF ve Markdown dosyalarını okuyabilir; böylece arayüze
+/// kötü amaçlı kod sızsa bile başka dosyalar (belgeler, anahtar dosyaları) okunamaz.
+fn ensure_kind(path: &str, allowed: &[&str]) -> Result<(), String> {
+    match kind_of(Path::new(path)) {
+        Some(k) if allowed.contains(&k) => Ok(()),
+        _ => Err("Yalnızca PDF ve Markdown dosyaları açılabilir".into()),
+    }
+}
+
 /// Dosyayı ham bayt olarak döndürür (JS tarafında ArrayBuffer olarak gelir, hızlıdır).
 #[tauri::command]
 pub async fn read_file_bytes(path: String) -> Result<tauri::ipc::Response, String> {
+    ensure_kind(&path, &["pdf"])?;
     let bytes = tauri::async_runtime::spawn_blocking(move || std::fs::read(&path))
         .await
         .map_err(|e| e.to_string())?
@@ -105,6 +115,7 @@ pub async fn read_file_bytes(path: String) -> Result<tauri::ipc::Response, Strin
 
 #[tauri::command]
 pub async fn read_text_file(path: String) -> Result<String, String> {
+    ensure_kind(&path, &["md"])?;
     let bytes = tauri::async_runtime::spawn_blocking(move || std::fs::read(&path))
         .await
         .map_err(|e| e.to_string())?
@@ -115,4 +126,18 @@ pub async fn read_text_file(path: String) -> Result<String, String> {
 #[tauri::command]
 pub fn path_exists(path: String) -> bool {
     Path::new(&path).exists()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ensure_kind;
+
+    #[test]
+    fn only_pdf_and_markdown_can_be_read() {
+        assert!(ensure_kind("C:\\Kitap\\a.PDF", &["pdf"]).is_ok());
+        assert!(ensure_kind("C:\\Notlar\\b.md", &["md"]).is_ok());
+        assert!(ensure_kind("C:\\Users\\x\\.ssh\\id_rsa", &["pdf"]).is_err());
+        assert!(ensure_kind("C:\\gizli.txt", &["md"]).is_err());
+        assert!(ensure_kind("C:\\Notlar\\b.md", &["pdf"]).is_err());
+    }
 }

@@ -27,6 +27,7 @@ public/pdfjs
 # ---- Gizli bilgiler: asla commit edilmez ----
 # Uygulama API anahtarlarını Windows Kimlik Bilgisi Yöneticisi'nde tutar, dosyaya yazmaz.
 # Yine de olası yerel dosyalara karşı koruma:
+# (Desenler kaynak kod dosyalarını dışlamayacak şekilde seçildi; örn. src-tauri/src/secrets.rs depoda olmalı)
 .env
 .env.*
 !.env.example
@@ -34,10 +35,11 @@ public/pdfjs
 *.key
 *.p12
 *.pfx
-secrets.*
 *.secret
-*api-key*
-*apikey*
+/secrets.json
+/secrets.toml
+/secrets.yaml
+/secrets.yml
 
 # Kişisel / yerel dosyalar
 *.lnk

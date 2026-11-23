@@ -4,6 +4,8 @@ import { api, toErrorInfo } from "../lib/api";
 import { getLanguage } from "../lib/languages";
 import { newProviderId, PRESETS, type Preset } from "../lib/providers";
 import type { Provider, Settings } from "../lib/types";
+
+const ANTHROPIC_URL = "https://api.anthropic.com";
 import { IconExternal } from "./Icons";
 
 interface Props {
@@ -47,17 +49,29 @@ export default function ProviderForm({ settings, editing, onSave, onCancel }: Pr
     setMessage(null);
   };
 
+  /** Anahtarın kilitleneceği adres (Claude için resmi adres) */
+  const keyOrigin = kind === "openai" ? baseUrl.trim() : ANTHROPIC_URL;
+  const originOf = (u: string) => {
+    try {
+      return new URL(u).origin;
+    } catch {
+      return "";
+    }
+  };
+  const originChanged =
+    !!editing && hasKey && kind === "openai" && originOf(baseUrl) !== originOf(editing.baseUrl ?? "");
+
   /** Girilen anahtarı kasaya yazar (test / model listesi için önce gerekir) */
   const storeKey = async () => {
     if (!key.trim()) return;
-    await api.setApiKey(id, key.trim());
+    await api.setApiKey(id, key.trim(), keyOrigin);
     setKey("");
     setHasKey(true);
     if (!editing) savedKeyForNew.current = true;
   };
 
   const needsKey = !local;
-  const keyMissing = needsKey && !hasKey && !key.trim();
+  const keyMissing = needsKey && (!hasKey || originChanged) && !key.trim();
 
   const fetchModels = async () => {
     setBusy("models");
@@ -104,7 +118,11 @@ export default function ProviderForm({ settings, editing, onSave, onCancel }: Pr
     if (kind === "openai" && !/^https?:\/\/.+/.test(baseUrl.trim()))
       return setMessage({ ok: false, text: "Geçerli bir adres girin (https://...)" });
     if (!model.trim()) return setMessage({ ok: false, text: "Model girin veya “Modelleri getir” ile seçin" });
-    if (keyMissing) return setMessage({ ok: false, text: "API anahtarını girin" });
+    if (keyMissing)
+      return setMessage({
+        ok: false,
+        text: originChanged ? "Adres değiştiği için güvenlik gereği anahtarı yeniden girin" : "API anahtarını girin",
+      });
     setBusy("save");
     try {
       await storeKey();
@@ -200,9 +218,12 @@ export default function ProviderForm({ settings, editing, onSave, onCancel }: Pr
           />
         </label>
       )}
+      {originChanged && !key.trim() && (
+        <div className="pf-message error">Adres değişti: güvenlik gereği anahtarı yeniden girmeniz gerekiyor.</div>
+      )}
       <div className="hint">
-        Anahtar Windows Kimlik Bilgisi Yöneticisi'nde saklanır; yalnızca bu sağlayıcının adresine gönderilir.
-        Anahtarınızı yalnızca güvendiğiniz servislere girin.
+        Anahtar Windows Kimlik Bilgisi Yöneticisi'nde saklanır ve bu adrese kilitlenir; başka bir adrese
+        asla gönderilmez. Anahtarınızı yalnızca güvendiğiniz servislere girin.
       </div>
 
       {message && <div className={`pf-message ${message.ok ? "ok" : "error"}`}>{message.text}</div>}

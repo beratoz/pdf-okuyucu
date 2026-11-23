@@ -26,7 +26,7 @@ impl HttpClient {
 pub struct TranslateError {
     /// "noKey" | "auth" | "quota" | "model" | "network" | "blocked" | "other"
     pub(crate) kind: &'static str,
-    message: String,
+    pub(crate) message: String,
 }
 
 impl TranslateError {
@@ -111,6 +111,17 @@ pub async fn translate_text(
     let kind = req.kind.clone().unwrap_or_else(|| {
         if req.engine == "deepl" { "deepl" } else { "gemini" }.to_string()
     });
+    // Güvenlik: yerleşik anahtarlar yalnızca kendi servislerinde kullanılabilir
+    let key_ref = req.key_ref.as_deref();
+    match kind.as_str() {
+        "deepl" if key_ref.is_some_and(|k| k != "deepl") => {
+            return Err(TranslateError::new("auth", "Geçersiz anahtar eşleşmesi"))
+        }
+        "gemini" if key_ref.is_some_and(|k| k != "gemini") => {
+            return Err(TranslateError::new("auth", "Geçersiz anahtar eşleşmesi"))
+        }
+        _ => {}
+    }
     match kind.as_str() {
         "deepl" => deepl_translate(&client.0, &req).await,
         "gemini" => gemini_translate(&client.0, &req).await,
@@ -148,7 +159,7 @@ async fn deepl_translate(
     client: &reqwest::Client,
     req: &TranslateRequest,
 ) -> Result<TranslateResponse, TranslateError> {
-    let key = get_api_key(req.key_ref.as_deref().unwrap_or("deepl"))
+    let key = get_api_key("deepl")
         .ok_or_else(|| TranslateError::new("noKey", "DeepL anahtarı girilmemiş"))?;
     let mut body = json!({
         "text": [req.text],
@@ -302,7 +313,7 @@ async fn gemini_translate(
     client: &reqwest::Client,
     req: &TranslateRequest,
 ) -> Result<TranslateResponse, TranslateError> {
-    let key = get_api_key(req.key_ref.as_deref().unwrap_or("gemini"))
+    let key = get_api_key("gemini")
         .ok_or_else(|| TranslateError::new("noKey", "Gemini anahtarı girilmemiş"))?;
     let default_model = if req.engine == "gemma" {
         "gemma-4-31b-it"

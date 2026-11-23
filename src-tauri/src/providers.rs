@@ -3,7 +3,7 @@
 //!   xAI, Together, yerelde Ollama / LM Studio ve benzerleri)
 //! - "anthropic": Claude (Anthropic Messages API)
 
-use crate::secrets::get_api_key;
+use crate::secrets::{get_bound_key, is_builtin};
 use crate::translate::{
     clean_llm_output, instruction, short, user_prompt, TranslateError, TranslateRequest,
     TranslateResponse,
@@ -42,6 +42,37 @@ pub fn validate_base_url(raw: &str) -> Result<String, TranslateError> {
     Ok(trimmed.to_string())
 }
 
+/// Adresin kökeni: "https://api.deepseek.com/v1" → "https://api.deepseek.com"
+pub fn origin_of(raw: &str) -> Result<String, TranslateError> {
+    let base = validate_base_url(raw)?;
+    let url = reqwest::Url::parse(&base)
+        .map_err(|_| TranslateError::new("other", "Sağlayıcı adresi geçersiz"))?;
+    Ok(url.origin().ascii_serialization())
+}
+
+/// Sağlayıcının anahtarını, yalnızca istek kayıtlı kökene gidiyorsa döndürür.
+/// Anahtar yoksa `Ok(None)` (ör. yerel Ollama). Köken uyuşmazsa hata.
+fn bound_key_for(key_ref: &str, target_base: &str) -> Result<Option<String>, TranslateError> {
+    if is_builtin(key_ref) {
+        return Err(TranslateError::new(
+            "auth",
+            "DeepL / Gemini anahtarı başka bir servise gönderilemez",
+        ));
+    }
+    match get_bound_key(key_ref) {
+        None => Ok(None),
+        Some((key, origin)) => {
+            if origin_of(target_base)? != origin {
+                return Err(TranslateError::new(
+                    "auth",
+                    "Sağlayıcı adresi değişti; güvenlik için anahtarı Ayarlar'dan yeniden girin",
+                ));
+            }
+            Ok(Some(key))
+        }
+    }
+}
+
 fn required_model(req: &TranslateRequest) -> Result<String, TranslateError> {
     req.model
         .as_deref()
@@ -51,8 +82,8 @@ fn required_model(req: &TranslateRequest) -> Result<String, TranslateError> {
         .ok_or_else(|| TranslateError::new("model", "Bu sağlayıcı için model seçilmemiş"))
 }
 
-fn key_of(req: &TranslateRequest) -> Option<String> {
-    req.key_ref.as_deref().and_then(get_api_key)
+fn key_ref_of(req: &TranslateRequest) -> &str {
+    req.key_ref.as_deref().unwrap_or(&req.engine)
 }
 
 // ---------------------------------------------------------------- OpenAI uyumlu
@@ -97,7 +128,7 @@ pub async fn openai_translate(
             .ok_or_else(|| TranslateError::new("other", "Sağlayıcı adresi eksik"))?,
     )?;
     let model = required_model(req)?;
-    let key = key_of(req);
+    let key = bound_key_for(key_ref_of(req), &base)?;
     let name = req.engine.as_str();
 
     let mut with_temperature = true;
@@ -193,7 +224,8 @@ pub async fn anthropic_translate(
 ) -> Result<TranslateResponse, TranslateError> {
     let base = anthropic_base(req)?;
     let model = required_model(req)?;
-    let key = key_of(req).ok_or_else(|| TranslateError::new("noKey", "Claude anahtarı girilmemiş"))?;
+    let key = bound_key_for(key_ref_of(req), &base)?
+        .ok_or_else(|| TranslateError::new("noKey", "Claude anahtarı girilmemiş"))?;
 
     let mut with_effort = true;
     let (status, text) = loop {
@@ -265,7 +297,8 @@ pub async fn list_provider_models(
     key_ref: Option<String>,
     base_url: Option<String>,
 ) -> Result<Vec<ProviderModel>, TranslateError> {
-    let key = key_ref.as_deref().and_then(get_api_key);
+    let key_ref = key_ref.ok_or_else(|| TranslateError::new("other", "Sağlayıcı kimliği eksik"))?;
+    let mut has_key = false;
     let (status, text) = match kind.as_str() {
         "openai" => {
             let base = validate_base_url(
@@ -273,6 +306,8 @@ pub async fn list_provider_models(
                     .as_deref()
                     .ok_or_else(|| TranslateError::new("other", "Sağlayıcı adresi eksik"))?,
             )?;
+            let key = bound_key_for(&key_ref, &base)?;
+            has_key = key.is_some();
             let mut rb = client.0.get(format!("{base}/models"));
             if let Some(k) = &key {
                 rb = rb.bearer_auth(k);
@@ -285,13 +320,12 @@ pub async fn list_provider_models(
                 Some(url) => validate_base_url(url)?,
                 None => ANTHROPIC_BASE.to_string(),
             };
-            let key = key
-                .clone()
+            let k = bound_key_for(&key_ref, &base)?
                 .ok_or_else(|| TranslateError::new("noKey", "Claude anahtarı girilmemiş"))?;
             let res = client
                 .0
                 .get(format!("{base}/v1/models?limit=100"))
-                .header("x-api-key", key)
+                .header("x-api-key", k)
                 .header("anthropic-version", ANTHROPIC_VERSION)
                 .send()
                 .await?;
@@ -305,7 +339,7 @@ pub async fn list_provider_models(
         return Err(if kind == "anthropic" {
             anthropic_error(status, &text)
         } else {
-            openai_error(status, &text, "Sağlayıcı", key.is_some())
+            openai_error(status, &text, "Sağlayıcı", has_key)
         });
     }
     let v: Value = serde_json::from_str(&text)
@@ -344,6 +378,22 @@ mod tests {
         assert!(validate_base_url("https://user:pass@example.com").is_err());
         assert!(validate_base_url("ftp://example.com").is_err());
         assert!(validate_base_url("bozuk adres").is_err());
+    }
+
+    #[test]
+    fn origins() {
+        assert_eq!(origin_of("https://api.deepseek.com/v1").unwrap(), "https://api.deepseek.com");
+        assert_eq!(origin_of("http://localhost:11434/v1").unwrap(), "http://localhost:11434");
+        assert_ne!(
+            origin_of("https://api.deepseek.com/v1").unwrap(),
+            origin_of("https://api.deepseek.com.evil.example/v1").unwrap()
+        );
+    }
+
+    #[test]
+    fn builtin_keys_cannot_go_to_custom_urls() {
+        assert_eq!(bound_key_for("gemini", "https://evil.example").unwrap_err().kind, "auth");
+        assert_eq!(bound_key_for("deepl", "https://evil.example").unwrap_err().kind, "auth");
     }
 
     #[test]

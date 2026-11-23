@@ -8,7 +8,9 @@ export const api = {
   pathExists: (path: string) => invoke<boolean>("path_exists", { path }),
 
   /** provider: anahtarın kasadaki adı ("deepl", "gemini" veya eklenen sağlayıcının kimliği) */
-  setApiKey: (provider: string, key: string) => invoke<void>("set_api_key", { provider, key }),
+  /** Ek sağlayıcılarda originUrl zorunlu: anahtar bu adrese kilitlenir */
+  setApiKey: (provider: string, key: string, originUrl?: string) =>
+    invoke<void>("set_api_key", { provider, key, originUrl }),
   hasApiKey: (provider: string) => invoke<boolean>("has_api_key", { provider }),
   deleteApiKey: (provider: string) => invoke<void>("delete_api_key", { provider }),
 

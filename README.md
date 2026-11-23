@@ -29,7 +29,9 @@ translates selected text, and lets you draw on PDFs. [English below ↓](#englis
 
 - Uygulamanın **Ayarlar** ekranına girdiğiniz anahtarlar **Windows Kimlik Bilgisi Yöneticisi**'nde saklanır (Denetim Masası → Kimlik Bilgisi Yöneticisi → Windows Kimlik Bilgileri → `com.okuyucu.pdf`).
 - Anahtarlar arayüze geri gönderilmez; yalnızca çeviri isteği sırasında Rust tarafında, ilgili sağlayıcının adresine gönderilir.
+- Her anahtar kaydedildiği adrese kilitlenir; başka bir adrese gönderilemez. Adresi değiştirirseniz anahtarı yeniden girmeniz istenir.
 - Uzak sağlayıcı adresleri `https://` olmak zorundadır. `http://` yalnızca kendi bilgisayarınızdaki sunucular (`localhost`) için kabul edilir.
+- Sıkı bir içerik güvenlik politikası (CSP), arayüzün dış sunuculara doğrudan bağlanmasını ve dışarıdan betik yüklemesini engeller. Ayrıntılar: [SECURITY.md](SECURITY.md).
 - Okuma kayıtları (ayarlar, konumlar, çizimler) `%APPDATA%\com.okuyucu.pdf\` klasöründedir. Bu klasörde anahtar yoktur.
 
 Depoya yanlışlıkla anahtar girmesine karşı üç kat koruma var:
