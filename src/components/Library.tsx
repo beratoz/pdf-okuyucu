@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { baseName } from "../lib/paths";
 import { cachedThumb, getThumb } from "../lib/thumbs";
+import { loadView, saveView, useRememberScroll } from "../lib/viewState";
 import { fileKey, type FileEntry, type Position, type RecentItem, type Settings } from "../lib/types";
 import { IconBack, IconClose, IconFolder, IconMd, IconPdf, IconSearch, IconSidebar, IconStar } from "./Icons";
 import { progressOf } from "./Sidebar";
@@ -68,7 +69,10 @@ function Cover({ f }: { f: FileEntry }) {
 export default function Library(p: Props) {
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState<KindFilter>("all");
-  const [closed, setClosed] = useState<Record<string, boolean>>({});
+  // Gizlenen klasörler ve kaydırma konumu bir sonraki açılışta da korunur
+  const [closed, setClosed] = useState<Record<string, boolean>>(() => loadView("kutuphane:kapali", {}));
+  useEffect(() => saveView("kutuphane:kapali", closed), [closed]);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const sort = p.settings.librarySort;
   const group = p.settings.libraryGroup;
 
@@ -109,6 +113,8 @@ export default function Library(p: Props) {
     }
     return [...map.values()].sort((a, b) => a.id.localeCompare(b.id, "tr"));
   }, [list, group]);
+
+  useRememberScroll(bodyRef, "kutuphane", p.files.length > 0);
 
   const card = (f: FileEntry) => {
     const prog = progressOf(p.positions[fileKey(f)], f.kind);
@@ -192,7 +198,7 @@ export default function Library(p: Props) {
         </label>
       </div>
 
-      <div className="library-body">
+      <div className="library-body" ref={bodyRef}>
         {p.folders.length === 0 && <div className="empty-note">Önce soldan bir klasör açın.</div>}
         {p.folders.length > 0 && list.length === 0 && <div className="empty-note">Eşleşen dosya yok.</div>}
         {sections.map((s) => (

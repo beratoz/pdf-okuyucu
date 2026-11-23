@@ -96,6 +96,17 @@ const FILES = [
   { path: `${ROOT}\\Ceviri Notlari.pdf`, name: "Ceviri Notlari.pdf", kind: "pdf", size: 120000, modified: Date.now(), dir: "", root: ROOT },
   { path: `${ROOT}\\Makaleler\\Uzun Makale.pdf`, name: "Uzun Makale.pdf", kind: "pdf", size: 340000, modified: Date.now(), dir: "Makaleler", root: ROOT },
   { path: `${ROOT}\\Notlar\\Okuma Notlari.md`, name: "Okuma Notlari.md", kind: "md", size: 4000, modified: Date.now(), dir: "Notlar", root: ROOT },
+  ...["Tarih", "Felsefe", "Fizik"].flatMap((dir) =>
+    Array.from({ length: 10 }, (_, i) => ({
+      path: `${ROOT}\\${dir}\\${dir} Cilt ${i + 1}.pdf`,
+      name: `${dir} Cilt ${i + 1}.pdf`,
+      kind: "pdf",
+      size: 500000 + i,
+      modified: Date.now(),
+      dir,
+      root: ROOT,
+    })),
+  ),
   ...["Algoritmalar", "Veri Yapilari", "Isletim Sistemleri", "Ag Temelleri"].map((n, i) => ({
     path: `${ROOT}\\Ders Kitaplari\\${n}.pdf`,
     name: `${n}.pdf`,

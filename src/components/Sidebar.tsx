@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { baseName } from "../lib/paths";
+import { loadView, saveView, useRememberScroll } from "../lib/viewState";
 import { fileKey, type ClearOptions, type FileEntry, type Position, type RecentItem } from "../lib/types";
 import {
   IconChevron,
@@ -95,9 +96,15 @@ function FileRow({
 }
 
 export default function Sidebar(p: Props) {
-  const [tab, setTab] = useState<Tab>("all");
+  const [tab, setTab] = useState<Tab>(() => loadView<Tab>("kenar:sekme", "all"));
   const [query, setQuery] = useState("");
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  // Açılan / kapatılan klasörler bir sonraki açılışta da aynı kalır
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => loadView("kenar:klasorler", {}));
+  useEffect(() => saveView("kenar:klasorler", collapsed), [collapsed]);
+  useEffect(() => saveView("kenar:sekme", tab), [tab]);
+  const listRef = useRef<HTMLDivElement>(null);
+  // Arama yaparken konum kaydedilmez/geri yüklenmez
+  useRememberScroll(listRef, query ? `kenar-arama` : `kenar:${tab}`, p.files.length > 0 || tab !== "all");
   const [editing, setEditing] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [opts, setOpts] = useState<ClearOptions>({ recent: true, progress: true, translations: false });
@@ -189,7 +196,7 @@ export default function Sidebar(p: Props) {
         </button>
       </div>
 
-      <div className="file-list">
+      <div className="file-list" ref={listRef}>
         {tab === "all" && (
           <>
             {p.folders.length === 0 && (
