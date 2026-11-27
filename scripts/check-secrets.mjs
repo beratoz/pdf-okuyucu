@@ -21,6 +21,41 @@ const PATTERNS = [
 
 const SKIP = [/^package-lock\.json$/, /\.(png|jpg|jpeg|gif|ico|icns|pdf|woff2?|ttf|lock)$/i, /^scripts\/check-secrets\.mjs$/];
 
+const scanLine = (line, where, findings) => {
+  for (const [name, re] of PATTERNS) if (re.test(line)) findings.push(`${where}  →  ${name}`);
+};
+
+// --history <git rev argümanları>: commit'lerin değişikliklerinde eklenen satırları tarar.
+// Gönderim öncesi kanca (pre-push) yalnızca gönderilecek commit'leri, CI ise tüm geçmişi (--all) verir.
+const hi = process.argv.indexOf("--history");
+if (hi !== -1) {
+  const revs = process.argv.slice(hi + 1);
+  const findings = [];
+  if (revs.length) {
+    const log = execSync(`git log -p --no-color --no-ext-diff --format=@@commit%x20%h ${revs.join(" ")} --`, {
+      encoding: "utf8",
+      maxBuffer: 512 * 1024 * 1024,
+    });
+    let commit = "?";
+    let file = "?";
+    for (const line of log.split("\n")) {
+      if (line.startsWith("@@commit ")) commit = line.slice(9);
+      else if (line.startsWith("+++ ")) file = line.replace(/^\+\+\+ (b\/)?/, "");
+      else if (line.startsWith("+") && !SKIP.some((re) => re.test(file))) scanLine(line, `${commit} ${file}`, findings);
+    }
+  }
+  if (findings.length) {
+    console.error("\n⛔ Gönderilecek commit'lerde olası API anahtarı var. Gönderim durduruldu:\n");
+    for (const f of [...new Set(findings)]) console.error("  " + f);
+    console.error(
+      "\nAnahtarı dosyadan çıkarıp bu commit'leri düzeltin (git commit --amend veya git rebase). Üstüne yeni bir \"silme\" commit'i eklemek yetmez; anahtar geçmişte kalır.\n",
+    );
+    process.exit(1);
+  }
+  console.log("✓ Commit geçmişi anahtar taraması temiz.");
+  process.exit(0);
+}
+
 // İzlenen + eklenmeyi bekleyen (yoksayılmayan) dosyalar
 const files = execSync("git ls-files --cached --others --exclude-standard", { encoding: "utf8" })
   .split("\n")
@@ -38,11 +73,7 @@ for (const file of files) {
     continue;
   }
   const lines = text.split("\n");
-  lines.forEach((line, i) => {
-    for (const [name, re] of PATTERNS) {
-      if (re.test(line)) findings.push(`${file}:${i + 1}  →  ${name}`);
-    }
-  });
+  lines.forEach((line, i) => scanLine(line, `${file}:${i + 1}`, findings));
 }
 
 if (findings.length) {

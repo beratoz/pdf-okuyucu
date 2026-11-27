@@ -10,7 +10,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "check:secrets": "node scripts/check-secrets.mjs"
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "check:history": "node scripts/check-secrets.mjs --history --all",
+    "prepare": "node scripts/setup-hooks.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

@@ -40,8 +40,13 @@ public/pdfjs
 /secrets.toml
 /secrets.yaml
 /secrets.yml
+credentials.json
+*.keystore
+*.jks
 
 # Kişisel / yerel dosyalar
 *.lnk
 data.json
 ceviri-onbellek.json
+# Test için klasöre konan belgeler (depoya gitmesin)
+*.pdf

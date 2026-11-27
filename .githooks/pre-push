@@ -1,0 +1,14 @@
+#!/bin/sh
+# Gönderim öncesi API anahtarı taraması: yalnızca uzak depoda henüz olmayan commit'leri tarar.
+# git, her gönderilen dal için stdin'e "<yerel ref> <yerel sha> <uzak ref> <uzak sha>" yazar.
+zero=0000000000000000000000000000000000000000
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue   # dal silme
+  if [ "$remote_sha" = "$zero" ]; then
+    range="$local_sha --not --remotes"     # yeni dal / etiket
+  else
+    range="$remote_sha..$local_sha"
+  fi
+  node scripts/check-secrets.mjs --history $range || exit 1
+done
+exit 0
