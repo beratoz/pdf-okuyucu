@@ -1,5 +1,5 @@
 # "v" ile başlayan bir etiket gönderildiğinde (ör. git tag v0.2.0 && git push --tags)
-# Windows kurulum dosyasını derler ve taslak bir GitHub Release oluşturur.
+# Windows kurulum dosyasını ve taşınabilir exe'yi derleyip GitHub Release olarak yayınlar.
 name: Release
 
 on:
@@ -38,6 +38,23 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "PDF Okuyucu ${{ github.ref_name }}"
-          releaseBody: "Windows kurulum dosyası aşağıda. İlk açılışta Windows SmartScreen uyarısı çıkarsa “Ek bilgi → Yine de çalıştır” deyin."
-          releaseDraft: true
+          releaseBody: |
+            ## İndirme
+            - **`..._x64-setup.exe`**: Kurulum dosyası (önerilen). Çift tıklayın, yönetici izni istemez; masaüstü ve Başlat menüsü kısayolu oluşturur.
+            - **`..._portable.exe`**: Kurulumsuz tek dosya. İstediğiniz klasöre koyup çalıştırın.
+
+            ## “Windows bilgisayarınızı korudu” uyarısı
+            Uygulama kod imzalı olmadığı için Windows SmartScreen bu uyarıyı gösterebilir. **Ek bilgi → Yine de çalıştır** deyin. Kaynak kodun tamamı bu depodadır ve dosya GitHub Actions üzerinde derlenmiştir.
+          releaseDraft: false
           prerelease: false
+
+      # Kurulumsuz (taşınabilir) exe'yi de aynı sürüme ekle
+      - name: Taşınabilir exe yükle
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $out = "PDF-Okuyucu_${tag}_portable.exe"
+          Copy-Item src-tauri/target/release/pdf-okuyucu.exe $out
+          gh release upload $tag $out --clobber

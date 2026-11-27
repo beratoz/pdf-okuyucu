@@ -55,6 +55,19 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "shortDescription": "PDF ve Markdown okuyucu, seçerek çeviri"
+    "shortDescription": "PDF ve Markdown okuyucu, seçerek çeviri",
+    "publisher": "beratoz",
+    "homepage": "https://github.com/beratoz/pdf-okuyucu",
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": ["Turkish", "English"],
+        "displayLanguageSelector": false
+      }
+    }
   }
 }

@@ -47,7 +47,13 @@ Elle taramak için: `npm run check:secrets`
 
 ## Kurulum (kullanıcılar için)
 
-[Releases](../../releases) sayfasından Windows kurulum dosyasını indirin. Uygulama kod imzalı olmadığı için Windows SmartScreen uyarı verebilir: **Ek bilgi → Yine de çalıştır**.
+1. [Releases](../../releases/latest) sayfasından **`PDF.Okuyucu_..._x64-setup.exe`** dosyasını indirin.
+2. Çift tıklayıp kurun. Yönetici izni istemez; masaüstü ve Başlat menüsü kısayolu oluşturur.
+3. Kurulum istemiyorsanız **`..._portable.exe`** dosyasını indirip doğrudan çalıştırabilirsiniz.
+
+**“Windows bilgisayarınızı korudu” uyarısı:** Uygulama kod imzalı olmadığı için Windows SmartScreen bu uyarıyı gösterebilir. **Ek bilgi → Yine de çalıştır** deyin. Dosyalar bu depodaki kaynak koddan GitHub Actions üzerinde derlenir.
+
+Kaldırmak için: **Ayarlar → Uygulamalar → PDF Okuyucu → Kaldır**. API anahtarlarınız Windows Kimlik Bilgisi Yöneticisi'nde kalır; isterseniz uygulamanın Ayarlar ekranından önce silebilirsiniz.
 
 Ücretsiz çeviri anahtarları (kart gerekmez):
 
